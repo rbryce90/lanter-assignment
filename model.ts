@@ -1,3 +1,14 @@
+export type CursorType = { vhs?: number, dvd?: number, projector?: number }
+
+export enum FilmType {
+    VHS = "vhs",
+    DVD = "dvd",
+    PROJECTOR = "projector"
+}
+
+
+
+
 export type FilmSearchRequest = {
     currentPage: number;
     pageSize: number;
@@ -6,17 +17,13 @@ export type FilmSearchRequest = {
     excludeVHS: boolean;
     excludeDVD: boolean;
     excludeProjector: boolean;
-    search: {
+    search?: {
         title: string;
         releaseYear: number;
         director: string;
         distributor: string;
-    },
-    cursor?: {
-        vhs: string,
-        dvd: string,
-        projector: string
     }
+    cursor?: CursorType
 }
 
 export type Film = {

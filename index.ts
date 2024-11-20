@@ -1,6 +1,6 @@
 // src/index.ts
 import express, { Express, Request, Response } from "express";
-import { Film, FilmSearchRequest } from "./model";
+import { Film, FilmSearchRequest, CursorType } from "./model";
 import { getFilms } from "./controller";
 
 
@@ -11,8 +11,8 @@ app.use(express.json());
 
 app.post("/search", async (req: Request, res: Response) => {
     const searchParms: FilmSearchRequest = req.body
-    const films: Film[] = await getFilms(searchParms)
-    res.send(films);
+    const payload: { films: Film[], cursor: CursorType } = await getFilms(searchParms)
+    res.send(payload);
 });
 
 app.listen(port, () => {
