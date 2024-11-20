@@ -5,6 +5,13 @@ const dvdAccessor = new AccessorClass(FilmServiceUrls.DVD)
 const vhsAccessor = new AccessorClass(FilmServiceUrls.VHS)
 const projectorAccessor = new AccessorClass(FilmServiceUrls.PROJECTOR)
 
+async function sort() {
+
+}
+
+async function generateCursor() {
+
+}
 async function getFilmsBySearch(excludeDVD: boolean, excludeProjector: boolean, excludeVHS: boolean, sortField: "title" | "releaseYear", sortDirection: "ASC" | "DESC", pageSize: number, currentPage: number) {
     let films: Film[] = []
 

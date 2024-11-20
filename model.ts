@@ -11,6 +11,11 @@ export type FilmSearchRequest = {
         releaseYear: number;
         director: string;
         distributor: string;
+    },
+    cursor?: {
+        vhs: string,
+        dvd: string,
+        projector: string
     }
 }
 
