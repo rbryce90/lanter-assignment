@@ -1,0 +1,27 @@
+title Secure File Upload and Processing with Self-Hosted Server
+
+participant "Client" as C
+participant "Amazon S3" as S3
+participant "Self-Hosted Server" as SH
+participant "Amazon SQS" as SQS
+participant "Rate-Limiting Lambda" as RL
+participant "ERP System" as ERP
+
+note over C: Step 1: Secure File Upload
+C->S3: Upload XML File (via Pre-signed URL)
+S3->S3: Store File
+S3->>SH: Trigger HTTP Notification (S3 Event)
+
+note over SH: Step 2: Process XML File
+SH->S3: Download File in Chunks
+S3-->SH: Return XML Chunk
+SH->SH: Parse XML Chunk and Transform to JSON
+SH->SQS: Enqueue JSON Order (Maintaining Order)
+
+note over RL: Step 3: Send Requests to ERP
+loop For Each JSON Order
+    RL->SQS: Poll for JSON Order
+    SQS-->RL: Return JSON Order
+    RL->ERP: Send REST API Request (POST /orders)
+    ERP-->RL: Response (Success/Error)
+end

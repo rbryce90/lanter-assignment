@@ -23,5 +23,8 @@ SearchResponse {
 }
 ```
 
-
 ## XML Architecture 
+
+### Design 
+![Film Image](design/XMLArchitecture.png)
+
