@@ -6,14 +6,18 @@ export enum FilmType {
     PROJECTOR = "projector"
 }
 
+export type DirectionType = "ASC" | "DESC"
+
+export type SortFieldType = "title" | "releaseYear"
+
 
 
 
 export type FilmSearchRequest = {
     currentPage: number;
     pageSize: number;
-    sortField: 'title' | 'releaseYear';
-    sortDirection: 'ASC' | 'DESC'
+    sortField: SortFieldType;
+    sortDirection: DirectionType
     excludeVHS: boolean;
     excludeDVD: boolean;
     excludeProjector: boolean;

@@ -1,5 +1,5 @@
 import { AccessorClass } from "./accessors/accessor"
-import { FilmSearchRequest, FilmServiceUrls, Film, CursorType, FilmType } from "./model"
+import { FilmSearchRequest, FilmServiceUrls, Film, CursorType, FilmType, SortFieldType, DirectionType } from "./model"
 
 const dvdAccessor = new AccessorClass(FilmServiceUrls.DVD)
 const vhsAccessor = new AccessorClass(FilmServiceUrls.VHS)
@@ -8,9 +8,15 @@ const projectorAccessor = new AccessorClass(FilmServiceUrls.PROJECTOR)
 function enhanceFilmsWithTypeAnd(films: Film[], type: FilmType, cursor?: number) {
     let count: number = cursor || 0
 
-
-
-
+    return films.map(film => {
+        const transformed = {
+            ...film,
+            type,
+            index: count,
+        }
+        count++
+        return transformed
+    });
 }
 
 async function getFilmsBySearch(params: FilmSearchRequest) {
@@ -43,13 +49,27 @@ async function getFilmsBySearch(params: FilmSearchRequest) {
     return films
 }
 
+function sortFilms(films: any[], sortField: SortFieldType, sortDirection: DirectionType) {
+    return films.sort((a, b) => {
+        if (a[sortField] < b[sortField]) {
+            return sortDirection === "ASC" ? -1 : 1;
+        }
+        if (a[sortField] > b[sortField]) {
+            return sortDirection === "ASC" ? 1 : -1;
+        }
+        return 0;
+    });
+}
+
+
+
+
 export async function getFilms(params: FilmSearchRequest) {
-    let unifiedCursor: CursorType = {}
-    let rawFilms: Film[] = await getFilmsBySearch(params)
-    console.log('rawFilms ===> ', rawFilms.length)
+    // let unifiedCursor: CursorType = {}
+    let transformedFilms: any[] = await getFilmsBySearch(params)
 
+    const sortedFilms = sortFilms(transformedFilms, params.sortField, params.sortDirection)
 
-    // let sortedAndDedupedFilms = sortAndDedup(rawFilms)
+    return { films: sortedFilms }
 
-    return { films: rawFilms, cursor: unifiedCursor }
 }
