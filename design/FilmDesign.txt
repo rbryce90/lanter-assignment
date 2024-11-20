@@ -1,0 +1,24 @@
+title Cursor-Based Pagination for Film Search
+
+Client->Middleware: POST /search { pageSize, sortField, sortDirection, cursor, search }
+activate Middleware
+
+alt Cursor provided
+    Middleware->VHS Service: POST /search { cursor.vhsCursor, pageSize, sortField, sortDirection, search }
+    Middleware->DVD Service: POST /search { cursor.dvdCursor, pageSize, sortField, sortDirection, search }
+    Middleware->Projector Service: POST /search { cursor.projectorCursor, pageSize, sortField, sortDirection, search }
+else No cursor
+    Middleware->VHS Service: POST /search { pageSize, sortField, sortDirection, search }
+    Middleware->DVD Service: POST /search { pageSize, sortField, sortDirection, search }
+    Middleware->Projector Service: POST /search { pageSize, sortField, sortDirection, search }
+end
+
+VHS Service-->Middleware: { films[], total, nextCursor: vhsNextCursor }
+DVD Service-->Middleware: { films[], total, nextCursor: dvdNextCursor }
+Projector Service-->Middleware: { films[], total, nextCursor: prjktrNextCursor }
+
+note over Middleware: Aggregate, deduplicate,\nand sort results by sortField and sortDirection
+Middleware->Middleware: Generate unified cursor { vhsNextCursor, dvdNextCursor, prjktrNextCursor }
+
+Middleware-->Client: { films[], nextCursor: unifiedCursor }
+deactivate Middleware
