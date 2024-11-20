@@ -1,4 +1,4 @@
-title Secure File Upload and Processing with Self-Hosted Server
+title Secure File Upload and Processing with Streaming from S3
 
 participant "Client" as C
 participant "Amazon S3" as S3
@@ -12,13 +12,31 @@ C->S3: Upload XML File (via Pre-signed URL)
 S3->S3: Store File
 S3->>SH: Trigger HTTP Notification (S3 Event)
 
-note over SH: Step 2: Process XML File
-SH->S3: Download File in Chunks
-S3-->SH: Return XML Chunk
+note over SH: Step 2: Stream File from S3 in Chunks
+SH->S3: Request File Metadata (File Size)
+S3->SH: Return File Metadata (Size)
+SH->S3: Request XML Chunk (Range: 0-10MB)
+S3-->SH: Return XML Chunk 0-10MB
 SH->SH: Parse XML Chunk and Transform to JSON
 SH->SQS: Enqueue JSON Order (Maintaining Order)
 
-note over RL: Step 3: Send Requests to ERP
+note over SH: Step 3: Continue Streaming and Processing Chunks
+SH->S3: Request XML Chunk (Range: 10-20MB)
+S3-->SH: Return XML Chunk 10-20MB
+SH->SH: Parse XML Chunk and Transform to JSON
+SH->SQS: Enqueue JSON Order (Maintaining Order)
+
+SH->S3: Request XML Chunk (Range: 20-30MB)
+S3-->SH: Return XML Chunk 20-30MB
+SH->SH: Parse XML Chunk and Transform to JSON
+SH->SQS: Enqueue JSON Order (Maintaining Order)
+...
+SH->S3: Request XML Chunk (Range: N-10MB to N-1MB)
+S3-->SH: Return XML Chunk N-10MB to N-1MB
+SH->SH: Parse XML Chunk and Transform to JSON
+SH->SQS: Enqueue JSON Order (Maintaining Order)
+
+note over RL: Step 4: Send Requests to ERP
 loop For Each JSON Order
     RL->SQS: Poll for JSON Order
     SQS-->RL: Return JSON Order
