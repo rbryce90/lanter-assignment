@@ -7,9 +7,21 @@ export class AccessorClass {
         this.url = url
     }
 
-    async getFilmsByParams(sortField: "title" | "releaseYear", sortDirection: "ASC" | "DESC", pageSize: number, currentPage: number): Promise<Film[]> {
-        const url = `${this.url}/search`
+    async sort() {
 
+    }
+
+    async generateCursory() {
+
+    }
+
+    async getFilmsByParams(sortField: "title" | "releaseYear", sortDirection: "ASC" | "DESC", pageSize: number, currentPage: number): Promise<Film[]> {
+
+        if (currentPage) {
+
+        }
+
+        const url = `${this.url}/search`
         return await axios.post(url, {
             sortDirection,
             sortField,

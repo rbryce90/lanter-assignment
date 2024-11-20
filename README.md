@@ -22,3 +22,6 @@ SearchResponse {
     }
 }
 ```
+
+
+## XML Architecture 

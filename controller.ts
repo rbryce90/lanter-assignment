@@ -22,13 +22,6 @@ async function getFilmsBySearch(excludeDVD: boolean, excludeProjector: boolean, 
     return films
 }
 
-const sortFilms = (films: Film[], field: "title" | "releaseYear", direction: "ASC" | "DESC"): Film[] => {
-    return films.sort((a, b) => {
-        const compareValue = a[field] > b[field] ? 1 : a[field] < b[field] ? -1 : 0;
-        return direction === "ASC" ? compareValue : -compareValue;
-    });
-};
-
 export async function getFilms(params: FilmSearchRequest) {
     const { currentPage, pageSize, sortField, sortDirection, excludeDVD, excludeProjector, excludeVHS, search } = params
 
