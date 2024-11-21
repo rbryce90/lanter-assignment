@@ -61,15 +61,55 @@ function sortFilms(films: any[], sortField: SortFieldType, sortDirection: Direct
     });
 }
 
+function dedup(films: any[], pageSize: number, cursor: CursorType) {
+    const seen = new Set<string>();
 
+    const dedupedFilms: any[] = [];
+    let filmsProcessed = 0;
 
+    for (const film of films) {
+        const filmKey = `${film.title}-${film.releaseYear}`;
+
+        if (!seen.has(filmKey)) {
+            seen.add(filmKey);
+            const uniqueFilm: Film = {
+                title: film.title,
+                releaseYear: film.releaseYear,
+                numberOfCopiesAvailable: film.numberOfCopiesAvailable,
+                director: film.director,
+                distributor: film.distributor
+            }
+            dedupedFilms.push(uniqueFilm);
+
+            filmsProcessed++;
+
+            if (filmsProcessed === pageSize) {
+                break;
+            }
+            if (film.type === FilmType.DVD) cursor.dvd = film.index;
+            if (film.type === FilmType.VHS) cursor.vhs = film.index;
+            if (film.type === FilmType.PROJECTOR) cursor.projector = film.index;
+        } else {
+            if (film.type === FilmType.DVD) cursor.dvd ? cursor.dvd++ : cursor.dvd = 0;
+            if (film.type === FilmType.VHS) cursor.vhs ? cursor.vhs++ : cursor.vhs = 0;
+            if (film.type === FilmType.PROJECTOR) cursor.projector ? cursor.projector++ : cursor.projector = 0;
+        }
+    }
+
+    return {
+        films: dedupedFilms,
+        cursor
+    }
+}
 
 export async function getFilms(params: FilmSearchRequest) {
-    // let unifiedCursor: CursorType = {}
     let transformedFilms: any[] = await getFilmsBySearch(params)
-
     const sortedFilms = sortFilms(transformedFilms, params.sortField, params.sortDirection)
+    const newCursor: CursorType = {
+        dvd: params.cursor?.dvd || 0,
+        vhs: params.cursor?.vhs || 0,
+        projector: params.cursor?.projector || 0
+    }
 
-    return { films: sortedFilms }
-
+    return dedup(sortedFilms, params.pageSize, newCursor)
 }

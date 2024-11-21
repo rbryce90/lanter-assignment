@@ -40,14 +40,11 @@ jest.mock('../accessors/accessor', () => ({
 describe('controller', () => {
     describe("getFilms", () => {
         it('should ', async () => {
-            // console.log('mock VHS ===> ', mockVhsData.slice(0, 5))
-            // console.log('mock DVD ===> ', mockDvdData.slice(0, 5))
-            // console.log('mock Projector ===> ', mockProjectorData.slice(0, 5))
             const mockVHS = new AccessorClass(FilmServiceUrls.VHS);
             const mockDVD = new AccessorClass(FilmServiceUrls.DVD);
             const mockProjector = new AccessorClass(FilmServiceUrls.PROJECTOR);
-            const pageSize = 10
 
+            const pageSize = 10
 
             const res = await getFilms(
                 {
@@ -65,7 +62,13 @@ describe('controller', () => {
 
             expect(res.films.length).toBe(pageSize)
 
-            expect(res).toEqual({ films: [], cursor: {} })
+            expect(res.cursor).toEqual(
+                {
+                    dvd: 8,
+                    vhs: 15,
+                    projector: 5
+
+                })
 
         })
     })
