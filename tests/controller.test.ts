@@ -1,7 +1,6 @@
 import { Film, FilmSearchRequest, FilmServiceUrls } from '../model';
-import { getFilms } from '../controller';
 import { AccessorClass } from '../accessors/accessor';
-
+import { getFilms, sortFilms } from '../controller';
 
 let mockVhsData: Film[] = Array.from({ length: 50 }, (_, index) => ({
     title: `Film Title ${index + 1}`,
@@ -27,12 +26,25 @@ let mockProjectorData: Film[] = Array.from({ length: 50 }, (_, index) => ({
     distributor: `Distributor ${index}`,
 }));
 
+
 jest.mock('../accessors/accessor', () => ({
     AccessorClass: jest.fn().mockImplementation((url) => ({
-        getFilmsByParams: jest.fn(() => {
-            if (url === FilmServiceUrls.VHS) return Promise.resolve(mockVhsData.slice(0, 19));
-            if (url === FilmServiceUrls.DVD) return Promise.resolve(mockDvdData.slice(0, 19));
-            if (url === FilmServiceUrls.PROJECTOR) return Promise.resolve(mockProjectorData.slice(0, 19));
+        getFilmsByParams: jest.fn((sortField, sortDirection, pageSize, cursor) => {
+            if (url === FilmServiceUrls.VHS) {
+                const start = cursor || 0;
+                const end = start + pageSize;
+                return Promise.resolve(sortFilms(mockVhsData, sortField, sortDirection).slice(start, end));
+            }
+            if (url === FilmServiceUrls.DVD) {
+                const start = cursor || 0;
+                const end = start + pageSize;
+                return Promise.resolve(sortFilms(mockDvdData, sortField, sortDirection).slice(start, end));
+            }
+            if (url === FilmServiceUrls.PROJECTOR) {
+                const start = cursor || 0;
+                const end = start + pageSize;
+                return Promise.resolve(sortFilms(mockProjectorData, sortField, sortDirection).slice(start, end));
+            }
         }),
     })),
 }));
@@ -46,7 +58,7 @@ describe('controller', () => {
 
             const pageSize = 10
 
-            const res = await getFilms(
+            const page1 = await getFilms(
                 {
                     currentPage: 1,
                     pageSize: pageSize,
@@ -60,15 +72,36 @@ describe('controller', () => {
                 } as FilmSearchRequest
             )
 
-            expect(res.films.length).toBe(pageSize)
+            const newCursor = {
+                dvd: 1,
+                vhs: 2,
+                projector: 5
 
-            expect(res.cursor).toEqual(
+            }
+
+            expect(page1.films.length).toBe(pageSize)
+            expect(page1.cursor).toEqual(newCursor)
+
+            const page2 = await getFilms(
                 {
-                    dvd: 8,
-                    vhs: 15,
-                    projector: 5
+                    currentPage: 2,
+                    pageSize: pageSize,
+                    sortField: 'title',
+                    sortDirection: 'ASC',
+                    excludeVHS: false,
+                    excludeDVD: false,
+                    excludeProjector: false,
+                    search: {},
+                    cursor: newCursor
+                } as FilmSearchRequest
+            )
 
-                })
+            expect(page2.films.length).toBe(pageSize)
+            expect(page2.cursor).toEqual({
+                dvd: 2,
+                projector: 11,
+                vhs: 3
+            })
 
         })
     })

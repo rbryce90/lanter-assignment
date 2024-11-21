@@ -13,7 +13,8 @@ export class AccessorClass {
         return await axios.post(url, {
             sortDirection,
             sortField,
-            cursor
+            cursor,
+            pageSize
         })
     }
 }

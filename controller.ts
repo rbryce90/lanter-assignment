@@ -24,32 +24,33 @@ async function getFilmsBySearch(params: FilmSearchRequest) {
     const sortField = params.sortField
     const sortDirection = params.sortDirection
     const pageSize = params.pageSize
-    const cursor: CursorType | undefined = params?.cursor
+    const cursor: CursorType = params?.cursor || {}
     const excludeDVD = params.excludeDVD
     const excludeProjector = params.excludeProjector
     const excludeVHS = params.excludeVHS
 
     if (!excludeDVD) {
         const filmData: Film[] = await dvdAccessor.getFilmsByParams(sortField, sortDirection, pageSize, cursor?.dvd)
-        const transformedFilms = enhanceFilmsWithTypeAnd(filmData, FilmType.DVD)
+        const transformedFilms = enhanceFilmsWithTypeAnd(filmData, FilmType.DVD, cursor?.dvd)
         films = films.concat(transformedFilms as any)
     }
 
     if (!excludeProjector) {
         const filmData = await projectorAccessor.getFilmsByParams(sortField, sortDirection, pageSize, cursor?.projector)
-        const transformedFilms = enhanceFilmsWithTypeAnd(filmData, FilmType.PROJECTOR)
+        const transformedFilms = enhanceFilmsWithTypeAnd(filmData, FilmType.PROJECTOR, cursor.projector)
         films = films.concat(transformedFilms as any)
     }
 
     if (!excludeVHS) {
         const filmData = await vhsAccessor.getFilmsByParams(sortField, sortDirection, pageSize, cursor?.vhs)
-        const transformedFilms = enhanceFilmsWithTypeAnd(filmData, FilmType.VHS)
+        const transformedFilms = enhanceFilmsWithTypeAnd(filmData, FilmType.VHS, cursor.vhs)
         films = films.concat(transformedFilms as any)
     }
+
     return films
 }
 
-function sortFilms(films: any[], sortField: SortFieldType, sortDirection: DirectionType) {
+export function sortFilms(films: any[], sortField: SortFieldType, sortDirection: DirectionType) {
     return films.sort((a, b) => {
         if (a[sortField] < b[sortField]) {
             return sortDirection === "ASC" ? -1 : 1;
