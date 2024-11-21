@@ -52,10 +52,6 @@ jest.mock('../accessors/accessor', () => ({
 describe('controller', () => {
     describe("getFilms", () => {
         it('should ', async () => {
-            const mockVHS = new AccessorClass(FilmServiceUrls.VHS);
-            const mockDVD = new AccessorClass(FilmServiceUrls.DVD);
-            const mockProjector = new AccessorClass(FilmServiceUrls.PROJECTOR);
-
             const pageSize = 10
 
             const page1 = await getFilms(
