@@ -1,31 +1,34 @@
-import { Film, FilmSearchRequest, FilmServiceUrls } from '../model';
+import { CursorType, Film, FilmSearchRequest, FilmServiceUrls } from '../model';
 import { AccessorClass } from '../accessors/accessor';
 import { getFilms, sortFilms } from '../controller';
 
-let mockVhsData: Film[] = Array.from({ length: 50 }, (_, index) => ({
-    title: `Film Title ${index + 1}`,
+const vhsFilms = ["deer hunter", "gladiator", "good will hunting", "revenge of the nerds"]
+const dvdFilms = ["alien", "airplane", "deer hunter", "gladiator", "revenge of the nerds"]
+const prjktr = ["gladiator", "revenge of the nerds"]
+
+let mockVhsData: Film[] = vhsFilms.map((title, index) => ({
+    title,
     releaseYear: 1980,
     numberOfCopiesAvailable: 20,
     director: `Director ${index}`,
     distributor: `Distributor ${index}`,
 }));
 
-let mockDvdData: Film[] = Array.from({ length: 50 }, (_, index) => ({
-    title: `Film Title ${index * 2}`,
+let mockDvdData: Film[] = dvdFilms.map((title, index) => ({
+    title,
     releaseYear: 1980,
     numberOfCopiesAvailable: Math.floor(Math.random() * 10) + 1,
     director: `Director ${index}`,
     distributor: `Distributor ${index}`,
 }));
 
-let mockProjectorData: Film[] = Array.from({ length: 50 }, (_, index) => ({
-    title: `Film Title ${index * 3}`,
+let mockProjectorData: Film[] = prjktr.map((title, index) => ({
+    title,
     releaseYear: 1980,
     numberOfCopiesAvailable: Math.floor(Math.random() * 10) + 1,
     director: `Director ${index}`,
     distributor: `Distributor ${index}`,
 }));
-
 
 jest.mock('../accessors/accessor', () => ({
     AccessorClass: jest.fn().mockImplementation((url) => ({
@@ -49,55 +52,78 @@ jest.mock('../accessors/accessor', () => ({
     })),
 }));
 
-describe('controller', () => {
-    describe("getFilms", () => {
-        it('should ', async () => {
-            const pageSize = 10
+describe('redo from test data', () => {
+    it('should work with test data from lanter', async () => {
+        const pageSize = 2
 
-            const page1 = await getFilms(
-                {
-                    currentPage: 1,
-                    pageSize: pageSize,
-                    sortField: 'title',
-                    sortDirection: 'ASC',
-                    excludeVHS: false,
-                    excludeDVD: false,
-                    excludeProjector: false,
-                    search: {},
-                    cursor: {}
-                } as FilmSearchRequest
-            )
+        const page1 = await getFilms(
+            {
+                currentPage: 0,
+                pageSize: pageSize,
+                sortField: 'title',
+                sortDirection: 'ASC',
+                excludeVHS: false,
+                excludeDVD: false,
+                excludeProjector: false,
+                search: {},
+                cursor: {}
+            } as FilmSearchRequest
+        )
 
-            const newCursor = {
-                dvd: 1,
-                vhs: 2,
-                projector: 6
-            }
+        const page1Cursor: CursorType = {
+            dvd: 1,
+            vhs: 0,
+            projector: 0
+        }
 
-            expect(page1.films.length).toBe(pageSize)
-            expect(page1.cursor).toEqual(newCursor)
+        expect(page1.films.map(film => film.title)).toEqual(["airplane", "alien"])
+        expect(page1.films.length).toBe(pageSize)
+        expect(page1.cursor).toEqual(page1Cursor)
 
-            const page2 = await getFilms(
-                {
-                    currentPage: 2,
-                    pageSize: pageSize,
-                    sortField: 'title',
-                    sortDirection: 'ASC',
-                    excludeVHS: false,
-                    excludeDVD: false,
-                    excludeProjector: false,
-                    search: {},
-                    cursor: newCursor
-                } as FilmSearchRequest
-            )
+        const page2 = await getFilms(
+            {
+                currentPage: 1,
+                pageSize: pageSize,
+                sortField: 'title',
+                sortDirection: 'ASC',
+                excludeVHS: false,
+                excludeDVD: false,
+                excludeProjector: false,
+                search: {},
+                cursor: page1Cursor
+            } as FilmSearchRequest
+        )
+        const page2Cursor: CursorType = {
+            dvd: 3,
+            projector: 0,
+            vhs: 1
+        }
 
-            expect(page2.films.length).toBe(pageSize)
-            expect(page2.cursor).toEqual({
-                dvd: 3,
-                projector: 14,
-                vhs: 5
-            })
+        expect(page2.films.map(({ title }) => title)).toEqual(["deer hunter", "gladiator"])
+        expect(page2.films.length).toBe(pageSize)
+        expect(page2.cursor).toEqual(page2Cursor)
 
+        const page3 = await getFilms(
+            {
+                currentPage: 2,
+                pageSize: pageSize,
+                sortField: 'title',
+                sortDirection: 'ASC',
+                excludeVHS: false,
+                excludeDVD: false,
+                excludeProjector: false,
+                search: {},
+                cursor: page2Cursor
+            } as FilmSearchRequest
+        )
+
+        expect(page3.films.map(({ title }) => title)).toEqual(["good will hunting", "revenge of the nerds"])
+        expect(page3.films.length).toBe(pageSize)
+        expect(page3.cursor).toEqual({
+            dvd: 4,
+            projector: 1,
+            vhs: 3
         })
+
     })
 })
