@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "jest --watch",
+    "test": "npx jest tests/controller.test.ts",
     "dev": "node ./dist/index.js",
     "watch": "tsc --watch"
   },
