@@ -71,8 +71,7 @@ describe('controller', () => {
             const newCursor = {
                 dvd: 1,
                 vhs: 2,
-                projector: 5
-
+                projector: 6
             }
 
             expect(page1.films.length).toBe(pageSize)
@@ -94,9 +93,9 @@ describe('controller', () => {
 
             expect(page2.films.length).toBe(pageSize)
             expect(page2.cursor).toEqual({
-                dvd: 2,
-                projector: 11,
-                vhs: 3
+                dvd: 3,
+                projector: 14,
+                vhs: 5
             })
 
         })

@@ -5,7 +5,7 @@ const dvdAccessor = new AccessorClass(FilmServiceUrls.DVD)
 const vhsAccessor = new AccessorClass(FilmServiceUrls.VHS)
 const projectorAccessor = new AccessorClass(FilmServiceUrls.PROJECTOR)
 
-function enhanceFilmsWithTypeAnd(films: Film[], type: FilmType, cursor?: number) {
+function enhanceFilmsWithTypeAndIndex(films: Film[], type: FilmType, cursor?: number) {
     let count: number = cursor || 0
 
     return films.map(film => {
@@ -19,6 +19,10 @@ function enhanceFilmsWithTypeAnd(films: Film[], type: FilmType, cursor?: number)
     });
 }
 
+function getStartingPoint(cursor: number | undefined) {
+    return cursor === undefined ? 0 : cursor + 1
+}
+
 async function getFilmsBySearch(params: FilmSearchRequest) {
     let films: Film[] = []
     const sortField = params.sortField
@@ -30,23 +34,25 @@ async function getFilmsBySearch(params: FilmSearchRequest) {
     const excludeVHS = params.excludeVHS
 
     if (!excludeDVD) {
-        const filmData: Film[] = await dvdAccessor.getFilmsByParams(sortField, sortDirection, pageSize, cursor?.dvd)
-        const transformedFilms = enhanceFilmsWithTypeAnd(filmData, FilmType.DVD, cursor?.dvd)
+        const start = getStartingPoint(cursor.dvd)
+        const filmData: Film[] = await dvdAccessor.getFilmsByParams(sortField, sortDirection, pageSize, start)
+        const transformedFilms = enhanceFilmsWithTypeAndIndex(filmData, FilmType.DVD, start)
         films = films.concat(transformedFilms as any)
     }
 
     if (!excludeProjector) {
-        const filmData = await projectorAccessor.getFilmsByParams(sortField, sortDirection, pageSize, cursor?.projector)
-        const transformedFilms = enhanceFilmsWithTypeAnd(filmData, FilmType.PROJECTOR, cursor.projector)
+        const start = getStartingPoint(cursor.projector)
+        const filmData = await projectorAccessor.getFilmsByParams(sortField, sortDirection, pageSize, start)
+        const transformedFilms = enhanceFilmsWithTypeAndIndex(filmData, FilmType.PROJECTOR, start)
         films = films.concat(transformedFilms as any)
     }
 
     if (!excludeVHS) {
-        const filmData = await vhsAccessor.getFilmsByParams(sortField, sortDirection, pageSize, cursor?.vhs)
-        const transformedFilms = enhanceFilmsWithTypeAnd(filmData, FilmType.VHS, cursor.vhs)
+        const start = getStartingPoint(cursor.vhs)
+        const filmData = await vhsAccessor.getFilmsByParams(sortField, sortDirection, pageSize, start)
+        const transformedFilms = enhanceFilmsWithTypeAndIndex(filmData, FilmType.VHS, start)
         films = films.concat(transformedFilms as any)
     }
-
     return films
 }
 
@@ -64,15 +70,20 @@ export function sortFilms(films: any[], sortField: SortFieldType, sortDirection:
 
 function dedup(films: any[], pageSize: number, cursor: CursorType) {
     const seen = new Set<string>();
-
     const dedupedFilms: any[] = [];
     let filmsProcessed = 0;
+    let found = false;
 
     for (const film of films) {
         const filmKey = `${film.title}-${film.releaseYear}`;
 
         if (!seen.has(filmKey)) {
+            if (found) {
+                break
+            }
+
             seen.add(filmKey);
+
             const uniqueFilm: Film = {
                 title: film.title,
                 releaseYear: film.releaseYear,
@@ -80,21 +91,19 @@ function dedup(films: any[], pageSize: number, cursor: CursorType) {
                 director: film.director,
                 distributor: film.distributor
             }
+
             dedupedFilms.push(uniqueFilm);
 
             filmsProcessed++;
 
-            if (filmsProcessed === pageSize) {
-                break;
+            if (dedupedFilms.length === pageSize) {
+                found = true
             }
-            if (film.type === FilmType.DVD) cursor.dvd = film.index;
-            if (film.type === FilmType.VHS) cursor.vhs = film.index;
-            if (film.type === FilmType.PROJECTOR) cursor.projector = film.index;
-        } else {
-            if (film.type === FilmType.DVD) cursor.dvd ? cursor.dvd++ : cursor.dvd = 0;
-            if (film.type === FilmType.VHS) cursor.vhs ? cursor.vhs++ : cursor.vhs = 0;
-            if (film.type === FilmType.PROJECTOR) cursor.projector ? cursor.projector++ : cursor.projector = 0;
         }
+
+        if (film.type === FilmType.DVD) cursor.dvd = film.index;
+        if (film.type === FilmType.VHS) cursor.vhs = film.index;
+        if (film.type === FilmType.PROJECTOR) cursor.projector = film.index;
     }
 
     return {
